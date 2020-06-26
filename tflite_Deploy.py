@@ -23,17 +23,17 @@ if __name__ == '__main__':
   parser.add_argument(
       '-i',
       '--image',
-      default='sample_WM.jpg',
+      default="/home/pi/tflitemodel/17574.jpg",
       help='image to be classified')
   parser.add_argument(
       '-m',
       '--model_file',
-      default='Mask_Detection(InceptionV3).tflite',
+      default="/home/pi/tflitemodel/Mask_detection(MobileNetV2).tflite",
       help='.tflite model to be executed')
   parser.add_argument(
       '-l',
       '--label_file',
-      default='labels.txt',
+      default="/home/pi/tflitemodel/labels.txt",
       help='name of file containing labels')
   parser.add_argument(
       '--input_mean',
