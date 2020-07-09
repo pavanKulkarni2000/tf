@@ -9,6 +9,7 @@ import time
 
 import numpy as np
 from PIL import Image
+from picamera import PiCamera
 # import tensorflow as tf # TF2
 import tflite_runtime.interpreter as tflite
 import cv2
@@ -19,17 +20,37 @@ def load_labels(filename):
     return [line.strip() for line in f.readlines()]
 
 
+def detect_and_predict_mask(frame, faceNet):
+  (h, w) = frame.shape[:2]
+  blob = cv2.dnn.blobFromImage(frame, 1.0, (300, 300),(104.0, 177.0, 123.0))
+  faceNet.setInput(blob)
+  detections = faceNet.forward()
+  faces = []
+  locs = []
+  for i in range(0, detections.shape[2]):
+    confidence = detections[0, 0, i, 2]
+
+    if confidence > 0.5:
+      box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
+      (startX, startY, endX, endY) = box.astype("int")
+      (startX, startY) = (max(0, startX), max(0, startY))
+      (endX, endY) = (min(w - 1, endX), min(h - 1, endY))
+      locs.append((startX, startY, endX, endY))
+      break
+
+  return locs
+
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument(
       '-i',
       '--image',
-      default='wm.jpg',
+      default='4321.jpg',
       help='image to be classified')
   parser.add_argument(
       '-m',
       '--model_file',
-      default='Mask_Detection(MobileNetV2).tflite',
+      default='SM.tflite',
       help='.tflite model to be executed')
   parser.add_argument(
       '-l',
@@ -61,74 +82,40 @@ if __name__ == '__main__':
   # NxHxWxC, H:1, W:2
   height = input_details[0]['shape'][1]
   width = input_details[0]['shape'][2]
-  img = Image.open(args.image).resize((width, height))
-
-  # add N dim
-  input_data = np.expand_dims(img, axis=0)
-
-  if floating_model:
-    input_data = (np.float32(input_data) - args.input_mean) / args.input_std
-
-  interpreter.set_tensor(input_details[0]['index'], input_data)
+  with PiCamera() as cam:
+    cam.capture('capture.jpg')
+  # img = Image.open('capture.jpg').resize((width, height))
 
   start_time = time.time()
-  interpreter.invoke()
-  stop_time = time.time()
-
-  output_data = interpreter.get_tensor(output_details[0]['index'])
-  results = np.squeeze(output_data)
-
-  top_k = results.argsort()[-5:][::-1]
-  labels = load_labels(args.label_file)
-  for i in top_k:
-    if floating_model:
-      print('{:08.6f}: {}'.format(float(results[i]), labels[i]))
-    else:
-      print('{:08.6f}: {}'.format(float(results[i] / 255.0), labels[i]))
-
-  print('time: {:.3f}ms'.format((stop_time - start_time) * 1000))
-
-
-def detect_and_predict_mask(frame, faceNet):
-  (h, w) = frame.shape[:2]
-  blob = cv2.dnn.blobFromImage(frame, 1.0, (300, 300),(104.0, 177.0, 123.0))
-  faceNet.setInput(blob)
-  detections = faceNet.forward()
-  faces = []
-  locs = []
-  for i in range(0, detections.shape[2]):
-    confidence = detections[0, 0, i, 2]
-
-    if confidence > 0.5:
-      box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
-      (startX, startY, endX, endY) = box.astype("int")
-      (startX, startY) = (max(0, startX), max(0, startY))
-      (endX, endY) = (min(w - 1, endX), min(h - 1, endY))
-      locs.append((startX, startY, endX, endY))
-      break
-
-  return locs
-
-while True:
-  faceNet=cv2.dnn.readNet("face_detector\deploy.prototxt", "face_detector\zres10_300x300_ssd_iter_140000.caffemodel")
-  frame = cv2.imread(args.image)
+  faceNet=cv2.dnn.readNet("deploy.prototxt", "res10_300x300_ssd_iter_140000.caffemodel")
+  frame = cv2.imread('capture.jpg')
   # print(frame)
   locs = detect_and_predict_mask(frame, faceNet)
   # print(locs)
   for box in locs:
     (startX, startY, endX, endY)=box
+    input_data=frame[startY:startY+endY, startX:startX+endX,:]
+    input_data=cv2.resize(input_data,(width, height))
+    if floating_model:
+      input_data = (np.float32(input_data) - args.input_mean) / args.input_std
+
+    interpreter.set_tensor(input_details[0]['index'], [input_data])
+    interpreter.invoke()
+
+    output_data = interpreter.get_tensor(output_details[0]['index'])
+    results = np.squeeze(output_data)
+  
     label = "Mask" if results[0] > results[1] else "No Mask"
     color = (0, 255, 0) if label == "Mask" else (0, 0, 255)
     label = "{}: {:.2f}%".format(label, max(results[0], results[1]) * 100)
+    print(label)
     cv2.putText(frame, label, (startX, startY - 10),
       cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
     cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
-	
-  cv2.imshow("Frame", frame)
+    
+  stop_time = time.time()
+  cv2.imwrite("result.jpg",frame)
 
-  key = cv2.waitKey(1) & 0xFF
-  if key == ord("q"):
-	  break
+  print('time: {:.3f}ms'.format((stop_time - start_time) * 1000))
 
-cv2.destroyAllWindows()
-	
+
