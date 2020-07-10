@@ -104,14 +104,15 @@ width = input_details[0]['shape'][2]
 print("[INFO] starting video stream...")
 vs = VideoStream(usePiCamera=args.picamera).start()
 time.sleep(2.0)
+faceNet=cv2.dnn.readNet("deploy.prototxt", "res10_300x300_ssd_iter_140000.caffemodel")
 z=0
-while z!=50:
+while z!=10:
   frame = vs.read()
 #   frame = imutils.resize(frame, width=224,height=224)
   frame=cv2.resize(frame,(224,224))
   # add N dim
-  faceNet=cv2.dnn.readNet("face_detector\deploy.prototxt", "face_detector\zres10_300x300_ssd_iter_140000.caffemodel")
   # print(frame)
+  start_time = time.time()
   locs = detect_and_predict_mask(frame, faceNet)
   # print(locs)
   for box in locs:
@@ -135,7 +136,9 @@ while z!=50:
       cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
     cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
 	
+  stop_time = time.time()
   cv2.imshow("Frame", frame)
+  print(str((stop_time-start_time)*1000)+"ms")
 
   key = cv2.waitKey(1) & 0xFF
   if key == ord("q"):
