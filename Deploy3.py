@@ -1,5 +1,6 @@
 """label_image for tflite."""
 
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -12,7 +13,8 @@ from PIL import Image
 # import tensorflow as tf # TF2
 import tflite_runtime.interpreter as tflite
 import cv2
-from imutils.video import VideoStream
+from imutils.video.pivideostream import PiVideoStream
+from draw import edit_frame
 import imutils
 
 
@@ -64,8 +66,10 @@ if __name__ == '__main__':
   # NxHxWxC, H:1, W:2
   height = input_details[0]['shape'][1]
   width = input_details[0]['shape'][2]
-  
+ 
 
+
+  
 
 def detect_and_predict_mask(frame, faceNet):
   (h, w) = frame.shape[:2]
@@ -102,14 +106,15 @@ height = input_details[0]['shape'][1]
 width = input_details[0]['shape'][2]
   
 print("[INFO] starting video stream...")
-vs = VideoStream(usePiCamera=args.picamera).start()
+vs = PiVideoStream((1024,768), 10).start()
+#vs = VideoStream(usePiCamera=args.picamera).start()
 time.sleep(2.0)
 faceNet=cv2.dnn.readNet("deploy.prototxt", "res10_300x300_ssd_iter_140000.caffemodel")
 z=0
 while z!=10:
   frame = vs.read()
 #   frame = imutils.resize(frame, width=224,height=224)
-  frame=cv2.resize(frame,(224,224))
+  # frame=cv2.resize(frame,(224,224))
   # add N dim
   # print(frame)
   start_time = time.time()
@@ -128,13 +133,21 @@ while z!=10:
     output_data = interpreter.get_tensor(output_details[0]['index'])
     results = np.squeeze(output_data)
   
-    label = "Mask" if results[0] > results[1] else "No Mask"
-    color = (0, 255, 0) if label == "Mask" else (0, 0, 255)
-    label = "{}: {:.2f}%".format(label, max(results[0], results[1]) * 100)
+    mask=results[0] > results[1]
+    if mask:
+      label ="Mask"
+      color = (0, 255, 0)
+      res=results[0]
+    else:
+      label ="No Mask"
+      color = (0, 0, 255)
+      res=results[1]
+    label = "{}: {:.2f}%".format(label, res * 100)
     print(label)
     cv2.putText(frame, label, (startX, startY - 10),
       cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
     cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
+    frame=edit_frame(frame,mask)
 	
   stop_time = time.time()
   cv2.imshow("Frame", frame)
