@@ -50,7 +50,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '-m',
       '--model_file',
-      default='SM.tflite',
+      default='MobV2.tflite',
       help='.tflite model to be executed')
   parser.add_argument(
       '-l',
