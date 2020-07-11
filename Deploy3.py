@@ -33,13 +33,8 @@ if __name__ == '__main__':
   parser.add_argument(
       '-m',
       '--model_file',
-      default='IncV3.tflite',
+      default='lite/IncV3.tflite',
       help='.tflite model to be executed')
-  parser.add_argument(
-      '-l',
-      '--label_file',
-      default='labels.txt',
-      help='name of file containing labels')
   parser.add_argument(
       '--input_mean',
       default=127.5, type=float,
@@ -109,7 +104,7 @@ print("[INFO] starting video stream...")
 vs = PiVideoStream((1024,768), 10).start()
 #vs = VideoStream(usePiCamera=args.picamera).start()
 time.sleep(2.0)
-faceNet=cv2.dnn.readNet("deploy.prototxt", "res10_300x300_ssd_iter_140000.caffemodel")
+faceNet=cv2.dnn.readNet("face_detector/deploy.prototxt", "face_detector/res10_300x300_ssd_iter_140000.caffemodel")
 z=0
 while z!=30:
   frame = vs.read()
