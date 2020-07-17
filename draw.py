@@ -21,13 +21,13 @@ def edit_frame(frame,mask,oxygen=96,temp=97.25):
 	alpha = 0.2
 	frame = cv2.addWeighted(framec, alpha, frame, 1 - alpha, 0)
 	
-	frame = cv2.putText(frame, 'Oxygen', (768+50,0+50), cv2.FONT_HERSHEY_SIMPLEX,  
+	frame = cv2.putText(frame, 'Oxygen', (768+70,0+50), cv2.FONT_HERSHEY_SIMPLEX,  
 				   1, (100,255,50), 2, cv2.LINE_AA) 
 	frame = cv2.putText(frame, str(oxygen), (768+50,256-50), cv2.FONT_HERSHEY_SIMPLEX,  
 				   4, (0,255,0), 8, cv2.LINE_AA) 
-	frame = cv2.putText(frame, 'Temperature', (768+10,256+50), cv2.FONT_HERSHEY_SIMPLEX,  
+	frame = cv2.putText(frame, 'Temperature', (768+30,256+50), cv2.FONT_HERSHEY_SIMPLEX,  
 				   1, (100,255,50), 2, cv2.LINE_AA) 
-	frame = cv2.putText(frame, str(temp), (768+20,512-50), cv2.FONT_HERSHEY_SIMPLEX,  
+	frame = cv2.putText(frame, str(temp), (768+36,512-50), cv2.FONT_HERSHEY_SIMPLEX,  
 				   2, (0,255,0), 8, cv2.LINE_AA) 
 	
 	frame = cv2.putText(frame, 'Mask', (768+100,512+50), cv2.FONT_HERSHEY_SIMPLEX,  

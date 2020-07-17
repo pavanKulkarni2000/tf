@@ -106,7 +106,7 @@ vs = PiVideoStream((1024,768), 10).start()
 time.sleep(2.0)
 faceNet=cv2.dnn.readNet("face_detector/deploy.prototxt", "face_detector/res10_300x300_ssd_iter_140000.caffemodel")
 z=0
-while z!=30:
+while z!=10:
   frame = vs.read()
 #   frame = imutils.resize(frame, width=224,height=224)
   # frame=cv2.resize(frame,(224,224))
