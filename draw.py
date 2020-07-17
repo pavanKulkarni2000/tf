@@ -4,40 +4,54 @@ from PIL import Image, ImageDraw, ImageFont
 
        
 def edit_frame(frame,mask,oxygen=96,temp=97.25):
-	if mask:
-		mcolor=(0,255,0)
-		cont=right
-	else:
-		mcolor=(0,0,255)
-		cont=wrong
-		
-	framec=frame.copy()
-	cv2.rectangle(frame,(768,4),(1020,252),(0,255,0),4)
-	cv2.rectangle(frame,(768,260),(1020,508),(0,255,0),4)
-	cv2.rectangle(frame,(768,516),(1020,764),mcolor,4)
-	cv2.rectangle(framec,(768,4),(1020,252),(0,255,0),-1)
-	cv2.rectangle(framec,(768,260),(1020,508),(0,255,0),-1)
-	cv2.rectangle(framec,(768,516),(1020,764),mcolor,-1)
-	alpha = 0.2
-	frame = cv2.addWeighted(framec, alpha, frame, 1 - alpha, 0)
-	
-	frame = cv2.putText(frame, 'Oxygen', (768+70,0+50), cv2.FONT_HERSHEY_SIMPLEX,  
-				   1, (100,255,50), 2, cv2.LINE_AA) 
-	frame = cv2.putText(frame, str(oxygen), (768+50,256-50), cv2.FONT_HERSHEY_SIMPLEX,  
-				   4, (0,255,0), 8, cv2.LINE_AA) 
-	frame = cv2.putText(frame, 'Temperature', (768+30,256+50), cv2.FONT_HERSHEY_SIMPLEX,  
-				   1, (100,255,50), 2, cv2.LINE_AA) 
-	frame = cv2.putText(frame, str(temp), (768+36,512-50), cv2.FONT_HERSHEY_SIMPLEX,  
-				   2, (0,255,0), 8, cv2.LINE_AA) 
-	
-	frame = cv2.putText(frame, 'Mask', (768+100,512+50), cv2.FONT_HERSHEY_SIMPLEX,  
-				   1, mcolor, 1, cv2.LINE_AA) 
-	
-	cont=cont[0]+[[768+32,512+64]]
-	
-	frame = cv2.fillConvexPoly(frame, cont, mcolor)
-	
-	return frame
+       if mask:
+              mcolor=(0,255,0)
+              cont=right
+              isMask = 'YES'
+       else:
+              mcolor=(0,0,255)
+              cont=wrong
+              isMask = 'NO MASK'
+       
+       temp =round(temp,2)
+       oxygen =round(oxygen,2)
+       
+       h,w,c=frame.shape
+       boxh=h//4
+       boxw=w//4
+
+       framec=frame.copy()
+       cv2.rectangle(frame,(0,0),(w,100),(50,50,50),-1)
+       alpha = 0.3
+       frame = cv2.addWeighted(framec, alpha, frame, 1 - alpha, 0)
+       frame = cv2.putText(frame, 'S.A.F.E. Biosecurity Solutions', (160,60), 
+                            cv2.FONT_HERSHEY_COMPLEX, 1.4, (255,255,255), 2, cv2.LINE_AA) 
+                               
+       #print(str(w)+','+str(h)+','+str(boxw)+','+str(boxh))
+              
+       frame = cv2.putText(frame, 'MASK', (w-boxw+10,0*boxh+150), cv2.FONT_HERSHEY_COMPLEX,  
+                               0.7, (255,255,255), 1, cv2.LINE_AA) 
+       
+       frame = cv2.putText(frame, isMask, (w-boxw+16,0*boxh+210), cv2.FONT_HERSHEY_COMPLEX,  
+                               1.4, mcolor, 2, cv2.LINE_AA) 
+     
+       frame = cv2.putText(frame, 'TEMPERATURE', (w-boxw+10,1*boxh+130), cv2.FONT_HERSHEY_COMPLEX,  
+                               0.7, (255,255,255), 1, cv2.LINE_AA) 
+       
+       frame = cv2.putText(frame, str(temp), (w-boxw+16,1*boxh+190), cv2.FONT_HERSHEY_COMPLEX,  
+                               1.4, (0,255,0), 2, cv2.LINE_AA) 
+    
+       frame = cv2.putText(frame, 'OXYGEN', (w-boxw+10,2*boxh+110), cv2.FONT_HERSHEY_COMPLEX,  
+                               0.7, (255,255,255), 1, cv2.LINE_AA) 
+       
+       frame = cv2.putText(frame, str(oxygen), (w-boxw+16,2*boxh+170), cv2.FONT_HERSHEY_COMPLEX,  
+                               1.4, (0,255,0), 2, cv2.LINE_AA) 
+       
+       #cont=cont[0]+[[w-boxw+36,2*boxh+140]]
+       
+       #frame = cv2.fillConvexPoly(frame, cont, mcolor)
+       
+       return frame
 
 
 right=[np.array([[[100,  19]],
