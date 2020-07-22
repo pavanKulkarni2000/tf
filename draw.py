@@ -2,54 +2,109 @@ import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
+def title(frame):
+       framec=frame.copy()
+       cv2.rectangle(frame,(0,0),(1024,100),(50,50,50),-1)
+       alpha = 0.3
+       frame = cv2.addWeighted(framec, alpha, frame, 1 - alpha, 0)
+       frame = cv2.putText(frame, 'S.A.F.E. Biosecurity Solutions', (160,60), 
+                            cv2.FONT_HERSHEY_COMPLEX, 1.4, (255,255,255), 2, cv2.LINE_AA) 
+       return frame
        
-def edit_frame(frame,mask,oxygen=96,temp=97.25):
-       if mask:
-              mcolor=(0,255,0)
-              cont=right
-              isMask = 'YES'
-       else:
-              mcolor=(0,0,255)
-              cont=wrong
-              isMask = 'NO MASK'
+def create_frame(val=255):
+       scrn=np.full((768,1024,3), 255, dtype=np.uint8)
+       scrn=title(scrn)
+       return scrn
+
+def wait_screen(scrn=create_frame()):
+       return cv2.putText(scrn, "The Booth is currently occupied, please await your turn.", (15,768//2 ), 
+                            cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2, cv2.LINE_AA) 
+                            
+def no_face_screen(scrn=create_frame()):
+       return cv2.putText(scrn, "Face not in range...", (300,768//2 ), 
+                            cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2, cv2.LINE_AA) 
+
+def no_mask_screen1(scrn=create_frame()):
+       return cv2.putText(scrn, "PLEASE WEAR YOUR MASK TO GAIN ENTRY", (150,768//2 ), 
+                            cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2, cv2.LINE_AA) 
+
+def no_mask_screen2(scrn=create_frame()):
+       return cv2.putText(scrn, "Sorry. No access granted since you are not wearing a mask!", (30,768//2 ), 
+                            cv2.FONT_HERSHEY_COMPLEX, 0.9, (0,0,255), 2, cv2.LINE_AA) 
+
+def temp_screen(scrn=create_frame()):
+       scrn=cv2.putText(scrn, "Please place your wrist near the Thermopile Sensor", (60,768//2 -10 ), 
+                            cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2, cv2.LINE_AA) 
+       return cv2.putText(scrn, "to measure your Body Temperature", (180,768//2+20 ), 
+                            cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2, cv2.LINE_AA) 
+
+def no_temp_screen1(temp,scrn=create_frame()):
+       scrn=edit_frame(scrn,True,temp,False,None,None)
+       scrn=cv2.putText(scrn, "Temperature beyond permissible limits.", (230,768 -200 ), 
+                            cv2.FONT_HERSHEY_COMPLEX, 0.7, (0,255,0), 1, cv2.LINE_AA) 
+       return cv2.putText(scrn, "Please try again by placing your wrist closer to the Thermopile sensor.", (80,768-150 ), 
+                            cv2.FONT_HERSHEY_COMPLEX, 0.7, (0,255,0), 1, cv2.LINE_AA) 
+
+def no_temp_screen2(scrn=create_frame()):
+       scrn= cv2.putText(scrn, "Sorry. No access granted since your temperature is", (30,768//2-10 ), 
+                            cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 2, cv2.LINE_AA) 
+       return cv2.putText(scrn, " beyond acceptable limits!", (280,768//2 +30), 
+                            cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 2, cv2.LINE_AA) 
+
+def oxy_screen(scrn=create_frame()):
+       scrn=cv2.putText(scrn, "Please place your finger in the Pulse Oximeter slot ", (60,768//2 -10 ), 
+                            cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2, cv2.LINE_AA) 
+       return cv2.putText(scrn, "to measure your Body Oxygen Levels", (180,768//2+20 ), 
+                            cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2, cv2.LINE_AA) 
+
+def no_oxy_screen1(temp,oxy,scrn=create_frame()):
+       scrn=edit_frame(scrn,True,temp,True,oxy,False)
+       scrn=cv2.putText(scrn, "Oxygen below permissible limits.", (230,768 -200 ), 
+                            cv2.FONT_HERSHEY_COMPLEX, 0.7, (0,255,0), 1, cv2.LINE_AA) 
+       return cv2.putText(scrn, "Please try again by placing your finger on the Pulse Oximeter sensor.", (80,768-150 ), 
+                            cv2.FONT_HERSHEY_COMPLEX, 0.7, (0,255,0), 1, cv2.LINE_AA) 
+
+def no_oxy_screen2(scrn=create_frame()):
+       scrn= cv2.putText(scrn, "Sorry. No access granted since your Oxygen levels are", (30,768//2-10 ), 
+                            cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 2, cv2.LINE_AA) 
+       return cv2.putText(scrn, " below acceptable limits!", (280,768//2 +30), 
+                            cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 2, cv2.LINE_AA) 
+
+def edit_frame(frame,mask,tempVal,tempBool,oxyVal,oxyBool):
        
-       temp =round(temp,2)
-       oxygen =round(oxygen,2)
        
        h,w,c=frame.shape
        boxh=h//4
        boxw=w//4
 
-       framec=frame.copy()
-       cv2.rectangle(frame,(0,0),(w,100),(50,50,50),-1)
-       alpha = 0.3
-       frame = cv2.addWeighted(framec, alpha, frame, 1 - alpha, 0)
-       frame = cv2.putText(frame, 'S.A.F.E. Biosecurity Solutions', (160,60), 
-                            cv2.FONT_HERSHEY_COMPLEX, 1.4, (255,255,255), 2, cv2.LINE_AA) 
+       frame=title(frame)
                                
        #print(str(w)+','+str(h)+','+str(boxw)+','+str(boxh))
               
        frame = cv2.putText(frame, 'MASK', (w-boxw+10,0*boxh+150), cv2.FONT_HERSHEY_COMPLEX,  
                                0.7, (255,255,255), 1, cv2.LINE_AA) 
        
-       frame = cv2.putText(frame, isMask, (w-boxw+16,0*boxh+210), cv2.FONT_HERSHEY_COMPLEX,  
-                               1.4, mcolor, 2, cv2.LINE_AA) 
+       frame = cv2.putText(frame, 'YES' if mask else 'NO MASK', (w-boxw+16,0*boxh+210), cv2.FONT_HERSHEY_COMPLEX,  
+                               1.4, (0,255,0) if mask else (0,0,255), 2, cv2.LINE_AA) 
      
-       frame = cv2.putText(frame, 'TEMPERATURE', (w-boxw+10,1*boxh+130), cv2.FONT_HERSHEY_COMPLEX,  
-                               0.7, (255,255,255), 1, cv2.LINE_AA) 
-       
-       frame = cv2.putText(frame, str(temp), (w-boxw+16,1*boxh+190), cv2.FONT_HERSHEY_COMPLEX,  
-                               1.4, (0,255,0), 2, cv2.LINE_AA) 
-    
-       frame = cv2.putText(frame, 'OXYGEN', (w-boxw+10,2*boxh+110), cv2.FONT_HERSHEY_COMPLEX,  
-                               0.7, (255,255,255), 1, cv2.LINE_AA) 
-       
-       frame = cv2.putText(frame, str(oxygen), (w-boxw+16,2*boxh+170), cv2.FONT_HERSHEY_COMPLEX,  
-                               1.4, (0,255,0), 2, cv2.LINE_AA) 
-       
-       #cont=cont[0]+[[w-boxw+36,2*boxh+140]]
-       
-       #frame = cv2.fillConvexPoly(frame, cont, mcolor)
+       if tempVal is not None:
+              tempVal =round(tempVal,2)
+              
+              frame = cv2.putText(frame, 'TEMPERATURE', (w-boxw+10,1*boxh+130), cv2.FONT_HERSHEY_COMPLEX,  
+                                      0.7, (255,255,255), 1, cv2.LINE_AA) 
+              
+              frame = cv2.putText(frame, str(tempVal), (w-boxw+16,1*boxh+190), cv2.FONT_HERSHEY_COMPLEX,  
+                                      1.4, (0,255,0) if tempBool else (0,0,255), 2, cv2.LINE_AA) 
+              
+              if oxyVal is not None:
+                     
+                     oxyVal =round(oxyVal,2)
+                     
+                     frame = cv2.putText(frame, 'OXYGEN', (w-boxw+10,2*boxh+110), cv2.FONT_HERSHEY_COMPLEX,  
+                                             0.7, (255,255,255), 1, cv2.LINE_AA) 
+                     
+                     frame = cv2.putText(frame, str(oxyVal), (w-boxw+16,2*boxh+170), cv2.FONT_HERSHEY_COMPLEX,  
+                                             1.4,  (0,255,0) if oxyBool else (0,0,255), 2, cv2.LINE_AA) 
        
        return frame
 

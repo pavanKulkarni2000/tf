@@ -1,83 +1,73 @@
-"""label_image for tflite."""
-
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-import Temperature
-import max30102
-import hrcalc
-import argparse
+#import Temperature
+#import max30102
+#import hrcalc
 import time
-
-import numpy as np
-from PIL import Image
-# import tensorflow as tf # TF2
-import tflite_runtime.interpreter as tflite
+import os
+import sys
+import shutil
+import draw
 import cv2
-from imutils.video.pivideostream import PiVideoStream
-from draw import edit_frame
-import imutils
+import numpy as np
+import detection
+from SafeThreads import Display
+from draw import *
 
-
-def load_labels(filename):
-  with open(filename, 'r') as f:
-    return [line.strip() for line in f.readlines()]
-
-  
-
-def detect_and_predict_mask(frame, faceNet):
-  (h, w) = frame.shape[:2]
-  blob = cv2.dnn.blobFromImage(frame, 1.0, (300, 300),(104.0, 177.0, 123.0))
-  faceNet.setInput(blob)
-  detections = faceNet.forward()
-  faces = []
-  locs = []
-  for i in range(0, detections.shape[2]):
-    confidence = detections[0, 0, i, 2]
-
-    if confidence > 0.5:
-      box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
-      (startX, startY, endX, endY) = box.astype("int")
-      (startX, startY) = (max(0, startX), max(0, startY))
-      (endX, endY) = (min(w - 1, endX), min(h - 1, endY))
-      locs.append((startX, startY, endX, endY))
-      break
-
-  return locs
+tempLow=95; tempHigh=99;
+oxygenLow=95; 
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-#   parser.add_argument(
-#       '-i',
-#       '--image',
-#       default='6.jpeg',
-#       help='image to be classified')
-  parser.add_argument(
-      '-m',
-      '--model_file',
-      default='lite/IncV3.tflite',
-      help='.tflite model to be executed')
-  parser.add_argument(
-      '--input_mean',
-      default=127.5, type=float,
-      help='input_mean')
-  parser.add_argument(
-      '--input_std',
-      default=127.5, type=float,
-      help='input standard deviation')
-  parser.add_argument(
-      '--num_threads', default=None, type=int, help='number of threads')
-  parser.add_argument('-p', '--picamera', action='store_true', default=False, help='Use PiCamera for image capture')
-  args = parser.parse_args()
+  cv2.destroyAllWindows()
+  cv2.namedWindow("SAFE Biosecurity Solutions", cv2.WND_PROP_FULLSCREEN)
+  cv2.setWindowProperty("SAFE Biosecurity Solutions",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
   
-  temp_sensor = Temperature.MLX90614()
-  tempVal=temp_sensor.get_avg_temp()
+  Display().run(wait_screen())
   
+  while True:
+    if 'entry.txt' not in os.listdir("/home/pi/tf/target"):
+      break
+    else:
+      time.sleep(0.5)
+  
+  #check face mask
+  faceDetector=detection.Detector()
+  frame,mask=faceDetector.start(frames=10)
+  
+  if not mask:
+    Display().run(no_mask_screen1())
+    time.sleep(4)
+    faceDetector=detection.Detector()
+    frame,mask=faceDetector.start(frames=10)
+    if not mask:
+      Display().run(no_mask_screen2())
+      sys.exit("NO MASK")
+    else:
+      Display().run(temp_screen())
+  else:
+    Display().run(temp_screen())
+    
+  #check temperature
   '''
-  for i in range(10):
+  temp_sensor = Temperature.MLX90614()
+  tempVal=temp_sensor.get_avg_temp()'''
+  tempVal=97.50
+  if tempVal>tempHigh or tempVal<tempLow:
+    Display().run(no_temp_screen1(tempVal,frame),5)
+    time.sleep(4)
     '''
+    temp_sensor = Temperature.MLX90614()
+    tempVal=temp_sensor.get_avg_temp()'''
+    tempVal=97.50
+    if tempVal>tempHigh or tempVal<tempLow:
+      Display().run(no_temp_screen2())
+      sys.exit("TEMPERATURE")
+    else:
+      Display().run(oxy_screen())
+  else:
+    Display().run(oxy_screen())
   
+    
+  #check oxygen
+  '''
   while True:
     max_obj = max30102.MAX30102()
     red_data, ir_data = max_obj.read_sequential()
@@ -85,93 +75,32 @@ if __name__ == '__main__':
     hr, hrc, spo2, spo2c = hrcalc.calc_hr_and_spo2(ir_data[:100], red_data[:100])
     if True:
       break
-      
-    
-
-  interpreter = tflite.Interpreter(
-      model_path=args.model_file)
-  interpreter.allocate_tensors()
-
-  input_details = interpreter.get_input_details()
-  output_details = interpreter.get_output_details()
-
-  # check the type of the input tensor
-  floating_model = input_details[0]['dtype'] == np.float32
-
-  # NxHxWxC, H:1, W:2
-  height = input_details[0]['shape'][1]
-  width = input_details[0]['shape'][2]
-
-
-
-  interpreter = tflite.Interpreter(
-        model_path=args.model_file)
-  interpreter.allocate_tensors()
-
-  input_details = interpreter.get_input_details()
-  output_details = interpreter.get_output_details()
-
-    # check the type of the input tensor
-  floating_model = input_details[0]['dtype'] == np.float32
-
-  # NxHxWxC, H:1, W:2
-  height = input_details[0]['shape'][1]
-  width = input_details[0]['shape'][2]
-    
-  print("[INFO] starting video stream...")
-  vs = PiVideoStream((1024,600), 10).start()
-  #vs = VideoStream(usePiCamera=args.picamera).start()
-  time.sleep(2.0)
-  faceNet=cv2.dnn.readNet("face_detector/deploy.prototxt", "face_detector/res10_300x300_ssd_iter_140000.caffemodel")
-  z=0
-  while z!=30:
-    frame = vs.read()
-  #   frame = imutils.resize(frame, width=224,height=224)
-    # frame=cv2.resize(frame,(224,224))
-    # add N dim
-    # print(frame)
-    start_time = time.time()
-    locs = detect_and_predict_mask(frame, faceNet)
-    # print(locs)
-    for box in locs:
-      (startX, startY, endX, endY)=box
-      input_data=frame[startY:startY+endY, startX:startX+endX,:]
-      input_data=cv2.resize(input_data,(width, height))
-      if floating_model:
-        input_data = (np.float32(input_data) - args.input_mean) / args.input_std
-
-      interpreter.set_tensor(input_details[0]['index'], [input_data])
-      interpreter.invoke()
-
-      output_data = interpreter.get_tensor(output_details[0]['index'])
-      results = np.squeeze(output_data)
-    
-      mask=results[0] > results[1]
-      if mask:
-        label ="Mask"
-        color = (0, 255, 0)
-        res=results[0]
-      else:
-        label ="No Mask"
-        color = (0, 0, 255)
-        res=results[1]
-      label = "{}: {:.2f}%".format(label, res * 100)
-      print(label)
-      cv2.putText(frame, label, (startX, startY - 10),
-        cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
-      cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
-      frame=edit_frame(frame,mask,spo2,tempVal)
-    
-    stop_time = time.time()
-    cv2.namedWindow("SAFE Biosecurity Solutions", cv2.WND_PROP_FULLSCREEN)
-    cv2.setWindowProperty("SAFE Biosecurity Solutions",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
-    cv2.imshow("SAFE Biosecurity Solutions", frame)
-    print(str((stop_time-start_time)*1000)+"ms")
-
-    key = cv2.waitKey(1) & 0xFF
-    if key == ord("q"):
-      break
-    z=z+1
-
+  '''
+  spo2=99
+  if spo2<oxyLow:
+    Display().run(no_oxy_screen1(spo2,frame),5)
+    time.sleep(4)
+    '''
+    while True:
+      max_obj = max30102.MAX30102()
+      red_data, ir_data = max_obj.read_sequential()
+      time.sleep(1)
+      hr, hrc, spo2, spo2c = hrcalc.calc_hr_and_spo2(ir_data[:100], red_data[:100])
+      if True:
+        break
+    '''
+    spo2=99
+    if spo2<oxyLow:
+      Display().run(no_oxy_screen2())
+      sys.exit("OXYGEN")
+  
+  faceDetector = detection.Detector()
+  frame,mask = faceDetector.start(tempVal,spo2,frames=10)
+  if mask:
+    f=open("target/entry.txt",'+w')
+    f.close()
+  else:
+    Display().run(no_mask_screen2())
   cv2.destroyAllWindows()
+  
 	
