@@ -52,7 +52,6 @@ class LiteDetector:
 		self.interpreter.invoke()
 		
 		output_data = self.interpreter.get_tensor(self.output_details[0]['index'])
-		print(output_data)
 		return np.squeeze(output_data)
 	
 
