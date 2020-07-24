@@ -13,17 +13,16 @@ from draw import *
 
 class LiteDetector:
 	def __init__(self):
-		interpreter = tflite.Interpreter("lite/IncV3.tflite")
-		interpreter.allocate_tensors()
-		self.interpreter=interpreter
-		self.input_details = interpreter.get_input_details()
-		self.output_details = interpreter.get_output_details()
+		self.interpreter = tflite.Interpreter(model_path="lite/IncV3.tflite")
+		self.interpreter.allocate_tensors()
+		self.input_details = self.interpreter.get_input_details()
+		self.output_details = self.interpreter.get_output_details()
 		# check the type of the input tenso
 		self.floating_model = self.input_details[0]['dtype'] == np.float32
 		# NxHxWxC, H:1, W:2
 		self.height = self.input_details[0]['shape'][1]
 		self.width = self.input_details[0]['shape'][2]
-	
+		
 	def get_height(self):
 		return self.height
 		
@@ -33,7 +32,7 @@ class LiteDetector:
 	def get_interpreter(self):
 		return self.interpreter
 	
-	def get_floating_model(self):
+	def is_floating_model(self):
 		return self.floating_model
 		
 	def get_input_details(self):
@@ -45,15 +44,15 @@ class LiteDetector:
 	def set_tensor(self,input_data):
 		self.interpreter.set_tensor(self.input_details[0]['index'], [input_data])
 	
-	def get_results(self,box,input_data):
-		(startX, startY, endX, endY)=box
+	def get_results(self,input_data):
 		input_data=cv2.resize(input_data,(self.get_width(), self.get_height()))
-		if self.get_floating_model():
-			input_data = (np.float32(input_data) - 127.5 / 127.5)
+		if self.is_floating_model():
+			input_data = (np.float32(input_data) - 127.5 )  / 127.5
 		self.interpreter.set_tensor(self.input_details[0]['index'], [input_data])
 		self.interpreter.invoke()
 		
 		output_data = self.interpreter.get_tensor(self.output_details[0]['index'])
+		print(output_data)
 		return np.squeeze(output_data)
 	
 
@@ -92,9 +91,7 @@ class Detector:
 		
 	def start(self,tempVal=None,tempBool=False,spo2=None,spo2Bool=False,frames=30):
 		print("[INFO] starting video stream...")
-		vs = PiVideoStream((1024,768), 5).start()
-		cv2.namedWindow("SAFE Biosecurity Solutions", cv2.WND_PROP_FULLSCREEN)
-		cv2.setWindowProperty("SAFE Biosecurity Solutions",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
+		vs = PiVideoStream((FRAME_W,FRAME_H), 1).start()
 		time.sleep(2.0)
 		
 		
@@ -105,51 +102,53 @@ class Detector:
 			start_time = time.time()
 			locs = self.detect_and_predict_mask(frame,self.faceNet)
 			if len(locs) is 0:
+				frame=put_title(frame)
 				no_face+=1
 				if no_face >=frames//2:
 					if N > 2*frames:
 						vs.stop()
 						cv2.destroyAllWindows()
 						sys.exit("No face recognized")
-					Display().run(no_face_screen(),2)
-					N+=z+1;z=0;yes_mask=0;no_mask=0;no_face=0;
+					Display().run(no_face_screen(frame),2)
+					N+=z+1;z=0;no_face=0;
 					time.sleep(1)
 					continue
-			for box in locs:
-				(startX, startY, endX, endY)=box
-				input_data=frame[startY:startY+endY, startX:startX+endX,:]
-				results =self.lite.get_results(box,input_data)
-				
-				mask=results[0] > results[1]
-				if mask:
-					yes_mask+=1
-					label ="Mask"
-					color = (0, 255, 0)
-					res=results[0]
-				else:
-					no_mask+=1
-					label ="No Mask"
-					color = (0, 0, 255)
-					res=results[1]
-				label = "{}: {:.2f}%".format(label, res * 100)
-				print(label)
-				cv2.putText(frame, label, (startX, startY - 10),cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
-				cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
-				frame=edit_frame(frame,mask,tempVal,tempBool,spo2,spo2Bool)
+			else:
+				for box in locs:
+					(startX, startY, endX, endY)=box
+					input_data=frame[startY:startY+endY, startX:startX+endX,:]
+					results =self.lite.get_results(input_data)
+					
+					mask=results[0] > results[1]
+					if mask:
+						yes_mask+=1
+						label ="Mask"
+						color = (0, 255, 0)
+						res=results[0]
+					else:
+						no_mask+=1
+						label ="No Mask"
+						color = (0, 0, 255)
+						res=results[1]
+					label = "{}: {:.2f}%".format(label, res * 100)
+					print(label)
+					cv2.putText(frame, label, (startX, startY - 10),cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
+					cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
+					frame=edit_frame(frame,mask,tempVal,tempBool,spo2,spo2Bool)
 			stop_time = time.time()
 			Display().run(frame)
 			print(str((stop_time-start_time)*1000)+"ms")
 			z+=1
 			if yes_mask>frames//2 or no_mask>frames//2:
 				vs.stop()
-				return (frame,yes_mask>frames)
+				return yes_mask>frames//2
 			if z>=frames:
 				if yes_mask>no_mask and yes_mask>frames//3:
 					vs.stop()
-					return (frame,True)
+					return True
 				elif no_mask>yes_mask and no_mask>frames//3:
 					vs.stop()
-					return (frame,False)
+					return False
 					
 
 
