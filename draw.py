@@ -7,7 +7,7 @@ boxw=FRAME_W//3
 boxh=boxw
 ins_s0=1
 ins_s1=1.4
-ins_s2=2
+ins_s2=1.6
 
 def put_title(frame):
        framec=frame.copy()
@@ -55,19 +55,23 @@ def no_mask_screen2(scrn=create_frame()):
        text2="since you are not wearing a mask!"
        (w,h),b=cv2.getTextSize(text2,cv2.FONT_HERSHEY_COMPLEX,ins_s1,cv2.LINE_AA)
        d2=(FRAME_W - w)//2
-       scrn= cv2.putText(scrn,text1, (d1,FRAME_H//2 -20),cv2.FONT_HERSHEY_COMPLEX, ins_s1, (255,255,255), 3, cv2.LINE_AA) 
-       scrn= cv2.putText(scrn,text2, (d2,FRAME_H//2 +40),cv2.FONT_HERSHEY_COMPLEX, ins_s1, (255,255,255), 3, cv2.LINE_AA) 
+       scrn= cv2.putText(scrn,text1, (d1,FRAME_H//2 -60),cv2.FONT_HERSHEY_COMPLEX, ins_s1, (255,255,255), 3, cv2.LINE_AA) 
+       scrn= cv2.putText(scrn,text2, (d2,FRAME_H//2 +10),cv2.FONT_HERSHEY_COMPLEX, ins_s1, (255,255,255), 3, cv2.LINE_AA) 
        return scrn
 
 def temp_screen(scrn=create_frame()):
-       text1="Please place your wrist near the Thermopile Sensor"
-       (w,h),b=cv2.getTextSize(text1,cv2.FONT_HERSHEY_COMPLEX,ins_s0,cv2.LINE_AA)
+       text1="Please place your wrist "
+       (w,h),b=cv2.getTextSize(text1,cv2.FONT_HERSHEY_COMPLEX,ins_s2,cv2.LINE_AA)
        d1=(FRAME_W - w)//2
-       text2="to measure your Body Temperature"
-       (w,h),b=cv2.getTextSize(text2,cv2.FONT_HERSHEY_COMPLEX,ins_s0,cv2.LINE_AA)
+       text2="near the Thermopile Sensor"
+       (w,h),b=cv2.getTextSize(text2,cv2.FONT_HERSHEY_COMPLEX,ins_s2,cv2.LINE_AA)
        d2=(FRAME_W - w)//2
-       scrn= cv2.putText(scrn,text1, (d1,FRAME_H//2 -20),cv2.FONT_HERSHEY_COMPLEX, ins_s0, (255,255,255), 2, cv2.LINE_AA) 
-       scrn= cv2.putText(scrn,text2, (d2,FRAME_H//2 +40),cv2.FONT_HERSHEY_COMPLEX, ins_s0, (255,255,255), 2, cv2.LINE_AA) 
+       text3="Measure your Body Temperature"
+       (w,h),b=cv2.getTextSize(text3,cv2.FONT_HERSHEY_COMPLEX,ins_s2,cv2.LINE_AA)
+       d3=(FRAME_W - w)//2
+       scrn= cv2.putText(scrn,text1, (d1,FRAME_H//2 -60),cv2.FONT_HERSHEY_COMPLEX, ins_s2, (255,255,255), 2, cv2.LINE_AA) 
+       scrn= cv2.putText(scrn,text2, (d2,FRAME_H//2 +10),cv2.FONT_HERSHEY_COMPLEX, ins_s2, (255,255,255), 2, cv2.LINE_AA) 
+       scrn= cv2.putText(scrn,text3, (d3,FRAME_H//2 +100),cv2.FONT_HERSHEY_COMPLEX, ins_s2, (255,255,255), 2, cv2.LINE_AA) 
        return scrn
 
 def no_temp_screen1(temp=None,scrn=create_frame()):
@@ -98,41 +102,49 @@ def no_temp_screen2(scrn=create_frame()):
        return scrn
 
 def oxy_screen(scrn=create_frame()):
-       text1="Please place your finger in the Pulse Oximeter slot "
-       (w,h),b=cv2.getTextSize(text1,cv2.FONT_HERSHEY_COMPLEX,ins_s0,cv2.LINE_AA)
+       text1="Please place your finger "
+       (w,h),b=cv2.getTextSize(text1,cv2.FONT_HERSHEY_COMPLEX,ins_s2,cv2.LINE_AA)
        d1=(FRAME_W - w)//2
-       text2="to measure your Body Oxygen Levels"
-       (w,h),b=cv2.getTextSize(text2,cv2.FONT_HERSHEY_COMPLEX,ins_s0,cv2.LINE_AA)
+       text2=" in the Pulse Oximeter slot"
+       (w,h),b=cv2.getTextSize(text2,cv2.FONT_HERSHEY_COMPLEX,ins_s2,cv2.LINE_AA)
        d2=(FRAME_W - w)//2
-       scrn= cv2.putText(scrn,text1, (d1,FRAME_H//2 -20),cv2.FONT_HERSHEY_COMPLEX, ins_s0, (255,255,255), 3, cv2.LINE_AA) 
-       scrn= cv2.putText(scrn,text2, (d2,FRAME_H//2 +40),cv2.FONT_HERSHEY_COMPLEX, ins_s0, (255,255,255), 3, cv2.LINE_AA) 
+       text3="Measure your Body Oxygen Levels"
+       (w,h),b=cv2.getTextSize(text3,cv2.FONT_HERSHEY_COMPLEX,ins_s2,cv2.LINE_AA)
+       d3=(FRAME_W - w)//2
+       scrn= cv2.putText(scrn,text1, (d1,FRAME_H//2 -60),cv2.FONT_HERSHEY_COMPLEX, ins_s2, (255,255,255), 2, cv2.LINE_AA) 
+       scrn= cv2.putText(scrn,text2, (d2,FRAME_H//2 +10),cv2.FONT_HERSHEY_COMPLEX, ins_s2, (255,255,255), 2, cv2.LINE_AA) 
+       scrn= cv2.putText(scrn,text3, (d3,FRAME_H//2 +100),cv2.FONT_HERSHEY_COMPLEX, ins_s2, (255,255,255), 2, cv2.LINE_AA) 
        return scrn
 
 def no_oxy_screen1(temp=None,oxy=None,scrn=create_frame()):
        scrn=edit_frame(scrn,True,temp,True,oxy,False)
        text1="Oxygen below permissible limits."
-       (w,h),b=cv2.getTextSize(text1,cv2.FONT_HERSHEY_COMPLEX,ins_s0,cv2.LINE_AA)
+       (w,h),b=cv2.getTextSize(text1,cv2.FONT_HERSHEY_COMPLEX,ins_s1,cv2.LINE_AA)
        d1=(FRAME_W - w)//2
-       text2="Please try again by placing your finger"
-       (w,h),b=cv2.getTextSize(text2,cv2.FONT_HERSHEY_COMPLEX,ins_s0,cv2.LINE_AA)
+       text2=" Please try again by placing your finger"
+       (w,h),b=cv2.getTextSize(text2,cv2.FONT_HERSHEY_COMPLEX,ins_s1,cv2.LINE_AA)
        d2=(FRAME_W - w)//2
        text3="on the Pulse Oximeter sensor."
-       (w,h),b=cv2.getTextSize(text3,cv2.FONT_HERSHEY_COMPLEX,ins_s0,cv2.LINE_AA)
+       (w,h),b=cv2.getTextSize(text3,cv2.FONT_HERSHEY_COMPLEX,ins_s1,cv2.LINE_AA)
        d3=(FRAME_W - w)//2
-       scrn= cv2.putText(scrn,text1, (d1,FRAME_H-boxh-boxh//2 -20),cv2.FONT_HERSHEY_COMPLEX, ins_s0, (255,255,255), 2, cv2.LINE_AA) 
-       scrn= cv2.putText(scrn,text2, (d2,FRAME_H-boxh-boxh//2 +40),cv2.FONT_HERSHEY_COMPLEX, ins_s0, (255,255,255), 2, cv2.LINE_AA) 
-       scrn= cv2.putText(scrn,text3, (d3,FRAME_H-boxh-boxh//2 +100),cv2.FONT_HERSHEY_COMPLEX, ins_s0, (255,255,255), 2, cv2.LINE_AA) 
+       scrn= cv2.putText(scrn,text1, (d1,FRAME_H//2 -60),cv2.FONT_HERSHEY_COMPLEX, ins_s1, (255,255,255), 2, cv2.LINE_AA) 
+       scrn= cv2.putText(scrn,text2, (d2,FRAME_H//2 +10),cv2.FONT_HERSHEY_COMPLEX, ins_s1, (255,255,255), 2, cv2.LINE_AA) 
+       scrn= cv2.putText(scrn,text3, (d3,FRAME_H//2 +100),cv2.FONT_HERSHEY_COMPLEX, ins_s1, (255,255,255), 2, cv2.LINE_AA) 
        return scrn
 
 def no_oxy_screen2(scrn=create_frame()):
-       text1= "Sorry. No access granted since your Oxygen levels are"
-       (w,h),b=cv2.getTextSize(text1,cv2.FONT_HERSHEY_COMPLEX,ins_s0,cv2.LINE_AA)
+       text1="Sorry. No access granted"
+       (w,h),b=cv2.getTextSize(text1,cv2.FONT_HERSHEY_COMPLEX,ins_s2,cv2.LINE_AA)
        d1=(FRAME_W - w)//2
-       text2=" below acceptable limits!"
-       (w,h),b=cv2.getTextSize(text2,cv2.FONT_HERSHEY_COMPLEX,ins_s0,cv2.LINE_AA)
+       text2=" since your Oxygen levels are"
+       (w,h),b=cv2.getTextSize(text2,cv2.FONT_HERSHEY_COMPLEX,ins_s2,cv2.LINE_AA)
        d2=(FRAME_W - w)//2
-       scrn= cv2.putText(scrn,text1, (d1+2,FRAME_H//2 -20),cv2.FONT_HERSHEY_COMPLEX, ins_s0, (255,255,255), 2, cv2.LINE_AA) 
-       scrn= cv2.putText(scrn,text2, (d2,FRAME_H//2 +40),cv2.FONT_HERSHEY_COMPLEX, ins_s0, (255,255,255), 2, cv2.LINE_AA) 
+       text3="below acceptable limits!"
+       (w,h),b=cv2.getTextSize(text3,cv2.FONT_HERSHEY_COMPLEX,ins_s2,cv2.LINE_AA)
+       d3=(FRAME_W - w)//2
+       scrn= cv2.putText(scrn,text1, (d1,FRAME_H//2 -60),cv2.FONT_HERSHEY_COMPLEX, ins_s2, (255,255,255), 2, cv2.LINE_AA) 
+       scrn= cv2.putText(scrn,text2, (d2,FRAME_H//2 +10),cv2.FONT_HERSHEY_COMPLEX, ins_s2, (255,255,255), 2, cv2.LINE_AA) 
+       scrn= cv2.putText(scrn,text3, (d3,FRAME_H//2 +90),cv2.FONT_HERSHEY_COMPLEX, ins_s2, (255,255,255), 2, cv2.LINE_AA) 
        return scrn
        
 def put_oxygen(frame,oxyVal,oxyBool):
@@ -164,16 +176,17 @@ def put_mask(frame,mask):
                                1, (0,255,0) if mask else (0,0,255), 3, cv2.LINE_AA)   
        return frame
        
-def entry_screen(frame,mask,tempVal,oxyVal):
-       frame=edit_frame(frame,mask,tempVal,True,oxyVal,True)
+def entry_screen(frame):
+       #frame=edit_frame(frame,mask,tempVal,True,oxyVal,True)
        text1="You may now enter the booth"
-       (w,h),b=cv2.getTextSize(text1,cv2.FONT_HERSHEY_COMPLEX,ins_s1,cv2.LINE_AA)
+       (w,h),b=cv2.getTextSize(text1,cv2.FONT_HERSHEY_COMPLEX,ins_s2,cv2.LINE_AA)
        d1=(FRAME_W - w)//2
-       frame= cv2.putText(frame,text1, (d1,FRAME_H-boxh-boxh//2 -20),cv2.FONT_HERSHEY_COMPLEX, ins_s1, (0,255,0), 4, cv2.LINE_AA)  
+       frame= cv2.putText(frame,text1, (d1,FRAME_H-boxh-boxh//2 -20),cv2.FONT_HERSHEY_COMPLEX, ins_s2, (0,255,0), 4, cv2.LINE_AA)  
        return frame
        
        
-def edit_frame(frame,mask,tempVal,tempBool,oxyVal,oxyBool):
+       
+def edit_frame(frame,mask,tempVal=None,tempBool=False,oxyVal=None,oxyBool=False):
        
 
        frame=put_title(frame)

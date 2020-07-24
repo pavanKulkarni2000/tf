@@ -9,41 +9,35 @@ import draw
 import cv2
 import numpy as np
 import detection
+from detection import take_snap
 from SafeThreads import *
 from draw import *
-import picamera
 
 tempLow=95; tempHigh=99;
 oxyLow=95; 
 
 if __name__ == '__main__':
-  cv2.destroyAllWindows()
+  
+  
   cv2.namedWindow("SAFE Biosecurity Solutions", cv2.WND_PROP_FULLSCREEN)
   cv2.setWindowProperty("SAFE Biosecurity Solutions",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
-  
-  Display().run(wait_screen())
-  
   while True:
     if 'entry.txt' not in os.listdir("/home/pi/tf/target"):
       break
     else:
+      Display().run(wait_screen())
       time.sleep(0.5)
   
   #check face mask
   faceDetector=detection.Detector()
   mask=faceDetector.start(frames=6)
   time.sleep(1)
-  with picamera.PiCamera() as camera:
-    with picamera.array.PiRGBArray(camera) as stream:
-      camera.resolution = (FRAME_W,FRAME_H)
-      camera.capture(stream, format='bgr')
-      image = stream.array
   
   
   if not mask:
-    Display().run(no_mask_screen1(image))
+    Display().run(no_mask_screen1(take_snap()))
     time.sleep(4)
-    mask=faceDetector.start(frames=10)
+    mask=faceDetector.start(frames=6)
     if not mask:
       Display().run(no_mask_screen2(),4)
       time.sleep(4)
@@ -56,25 +50,22 @@ if __name__ == '__main__':
   temp_sensor = Temperature.MLX90614()
   tempVal=temp_sensor.get_avg_temp()'''
   tempVal=97.50
-  with picamera.PiCamera() as camera:
-    with picamera.array.PiRGBArray(camera) as stream:
-      camera.resolution = (FRAME_W,FRAME_H)
-      camera.capture(stream, format='bgr')
-      image = stream.array
+  time.sleep(3)
   if tempVal>tempHigh or tempVal<tempLow:
-    Display().run(tempVal,no_temp_screen1(image),5)
-    time.sleep(3)
+    Display().run(tempVal,no_temp_screen1(take_snap()),5)
     '''
     temp_sensor = Temperature.MLX90614()
     tempVal=temp_sensor.get_avg_temp()'''
     tempVal=97.50
+    time.sleep(3)
     if tempVal>tempHigh or tempVal<tempLow:
-      frame1=put_temperature(tempVal,frame.copy())
-      Display().run(no_temp_screen2(frame1),3)
+      Display().run(no_temp_screen2(),3)
       time.sleep(3)
       sys.exit("TEMPERATURE")
     
-  Display().run(oxy_screen(),3)
+  Display().run(edit_frame(take_snap(),True,tempVal,True),3)
+  time.sleep(2)
+  Display().run(oxy_screen(),2)
     
   
     
@@ -90,14 +81,9 @@ if __name__ == '__main__':
       break
   '''
   spo2=99
-  
-  with picamera.PiCamera() as camera:
-    with picamera.array.PiRGBArray(camera) as stream:
-      camera.resolution = (FRAME_W,FRAME_H)
-      camera.capture(stream, format='bgr')
-      image = stream.array
+  time.sleep(3)
   if spo2<oxyLow:
-    Display().run(tempVal,spo2,no_oxy_screen1(spo2,frame),3)
+    Display().run(tempVal,spo2,no_oxy_screen1(spo2,take_snap()),3)
     time.sleep(3)
     '''
     while True:
@@ -109,6 +95,7 @@ if __name__ == '__main__':
       if True:
         break
     '''
+    time.sleep(3)
     spo2=99
     if spo2<oxyLow:
       Display().run(no_oxy_screen2())
@@ -116,18 +103,13 @@ if __name__ == '__main__':
   
   mask = faceDetector.start(tempVal,True,spo2,True,frames=10)
   time.sleep(1)
-  with picamera.PiCamera() as camera:
-    with picamera.array.PiRGBArray(camera) as stream:
-      camera.resolution = (FRAME_W,FRAME_H)
-      camera.capture(stream, format='bgr')
-      image = stream.array
   if mask:
-    Display().run(entry_screen(image,mask,tempVal,spo2),2)
+    Display().run(entry_screen(take_snap()),2)
     f=open("target/entry.txt",'+w')
     f.close()
     time.sleep(4)
   else:
-    Display().run(no_mask_screen2(image),2)
+    Display().run(no_mask_screen2(),2)
     time.sleep(2)
   cv2.destroyAllWindows()
   

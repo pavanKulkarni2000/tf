@@ -2,6 +2,7 @@ import time
 import cv2
 import imutils
 import sys
+import io
 import numpy as np
 from SafeThreads import Display
 from PIL import Image
@@ -9,8 +10,16 @@ from PIL import Image
 import tflite_runtime.interpreter as tflite
 from imutils.video.pivideostream import PiVideoStream
 from draw import *
+import picamera
 
-
+def take_snap():
+  with picamera.PiCamera() as camera:
+    with picamera.array.PiRGBArray(camera) as stream:
+      camera.resolution = (FRAME_W,FRAME_H)
+      camera.capture(stream, format='bgr')
+      image = stream.array
+  return image
+	
 class LiteDetector:
 	def __init__(self):
 		self.interpreter = tflite.Interpreter(model_path="lite/IncV3.tflite")
@@ -90,7 +99,7 @@ class Detector:
 		
 	def start(self,tempVal=None,tempBool=False,spo2=None,spo2Bool=False,frames=30):
 		print("[INFO] starting video stream...")
-		vs = PiVideoStream((FRAME_W,FRAME_H), 10).start()
+		vs = PiVideoStream((FRAME_W,FRAME_H), 2).start()
 		time.sleep(2.0)
 		
 		
@@ -108,9 +117,9 @@ class Detector:
 						vs.stop()
 						cv2.destroyAllWindows()
 						sys.exit("No face recognized")
-					Display().run(no_face_screen(frame),2)
+					Display().run(no_face_screen(frame),3)
 					N+=z+1;z=0;no_face=0;
-					time.sleep(1)
+					time.sleep(2)
 					continue
 			else:
 				for box in locs:
@@ -140,8 +149,10 @@ class Detector:
 			z+=1
 			if yes_mask>frames//2 or no_mask>frames//2:
 				vs.stop()
+				Display().run(frame)
 				return yes_mask>frames//2
 			if z>=frames:
+				Display().run(frame)
 				if yes_mask>no_mask and yes_mask>frames//3:
 					vs.stop()
 					return True
