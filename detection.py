@@ -91,7 +91,7 @@ class Detector:
 		
 	def start(self,tempVal=None,tempBool=False,spo2=None,spo2Bool=False,frames=30):
 		print("[INFO] starting video stream...")
-		vs = PiVideoStream((FRAME_W,FRAME_H), 1).start()
+		vs = PiVideoStream((FRAME_W,FRAME_H), 10).start()
 		time.sleep(2.0)
 		
 		
