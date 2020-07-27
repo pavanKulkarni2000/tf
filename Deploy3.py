@@ -124,4 +124,14 @@ if __name__ == '__main__':
     Display().run(no_mask_screen2(),2)
     time.sleep(2)'''
   
+  while True:
+    if 'exit.txt' in os.listdir("/home/pi"):
+      os.remove("/home/pi/exit.txt")
+      break
+    else:
+      Display().run(wait_screen())
+      time.sleep(0.5)
+
+  cv2.destroyAllWindows()
+
 	
