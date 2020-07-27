@@ -12,17 +12,17 @@ from imutils.video.pivideostream import PiVideoStream
 from draw import *
 import picamera
 
+
 def take_snap():
-  with picamera.PiCamera() as camera:
-    with picamera.array.PiRGBArray(camera) as stream:
-      camera.resolution = (FRAME_W,FRAME_H)
-      camera.capture(stream, format='bgr')
-      image = stream.array
-  return image
+	my_file = open('my_image.jpg', 'wb')
+	with picamera.PiCamera() as camera:
+		camera.resolution = (FRAME_W, FRAME_H)
+		camera.capture(my_file)
+	return cv2.imread('my_image.jpg')
 	
 class LiteDetector:
 	def __init__(self):
-		self.interpreter = tflite.Interpreter(model_path="lite/IncV3.tflite")
+		self.interpreter = tflite.Interpreter(model_path="/home/pi/tf/lite/IncV3.tflite")
 		self.interpreter.allocate_tensors()
 		self.input_details = self.interpreter.get_input_details()
 		self.output_details = self.interpreter.get_output_details()
@@ -50,6 +50,7 @@ class LiteDetector:
 	def get_output_details(self):
 		return self.output_details
 		
+
 	def set_tensor(self,input_data):
 		self.interpreter.set_tensor(self.input_details[0]['index'], [input_data])
 	
@@ -67,6 +68,12 @@ class LiteDetector:
 
 
 class Detector:
+	
+	def __init__(self,caffe_model_file="/home/pi/tf/face_detector/res10_300x300_ssd_iter_140000.caffemodel",caffe_prototxt_file="/home/pi/tf/face_detector/deploy.prototxt"):
+		self.lite=LiteDetector()
+		#face detector
+		self.faceNet=cv2.dnn.readNet(caffe_prototxt_file, caffe_model_file)
+		
 	
 	def load_labels(self,filename):
 		with open(filename, 'r') as f:
@@ -91,15 +98,10 @@ class Detector:
 				break
 
 		return locs
-	
-	def __init__(self,caffe_model_file="face_detector/res10_300x300_ssd_iter_140000.caffemodel",caffe_prototxt_file="face_detector/deploy.prototxt"):
-		self.lite=LiteDetector()
-		#face detector
-		self.faceNet=cv2.dnn.readNet(caffe_prototxt_file, caffe_model_file)
 		
 	def start(self,tempVal=None,tempBool=False,spo2=None,spo2Bool=False,frames=30):
 		print("[INFO] starting video stream...")
-		vs = PiVideoStream((FRAME_W,FRAME_H), 2).start()
+		vs = PiVideoStream((FRAME_W,FRAME_H), 10).start()
 		time.sleep(2.0)
 		
 		
