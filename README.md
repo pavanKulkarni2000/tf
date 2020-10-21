@@ -3,7 +3,7 @@ This module can be used to run Face Mask Detection in realtime on PiCamera.
 <br><br><br><br>
 For mask detection, first face detecion model is run, here caffe model is used for face detection. It returns the localization of the face if detected. 
 <br><br>
-Further, for classifying the cropped face image, a binary classifier is used. Transferred learning is used here to get a good acuuracy without much dataset and training time.
+Further, for classifying the cropped face image, a binary classifier is used. To train the classifier, transferred learning is used to get a good acuuracy without incuring the requirement of larger dataset and training time.
 <br><br>
 We have tried both inceptionV3 and mobilenetV2 architecure neural models, to find the best fit for this purpose. Further both the models are converted to tflite format to be light and portable and more importantly to run effeciently on the RPi.
 <br><br>
