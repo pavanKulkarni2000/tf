@@ -1,1 +1,1 @@
-<h1>running mask detection on rpi</h1>
+<h1>Mask detection on rpi</h1>
