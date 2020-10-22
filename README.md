@@ -1,4 +1,4 @@
-#Mask detection on rpi
+# Mask detection on rpi
 This module can be used to run Face Mask Detection in realtime on PiCamera.
 <br><br><br><br>
 For mask detection, first face detecion model is run, here caffe model is used for face detection. It returns the localization of the face if detected. 
